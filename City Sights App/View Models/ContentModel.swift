@@ -12,6 +12,9 @@ class ContentModel: NSObject, CLLocationManagerDelegate, ObservableObject {
     
     var locationManager = CLLocationManager()
     
+    @Published var restaurants = [Business]()
+    @Published var sights = [Business]()
+    
     override init() {
         
         // init method of NSObject
@@ -55,8 +58,8 @@ class ContentModel: NSObject, CLLocationManagerDelegate, ObservableObject {
             locationManager.stopUpdatingLocation()
             
             // If we have the coordinates of the user, send into Yelp API
-            // getBusinesses(category: "arts", location: userLocation!)
-            getBusinesses(category: "restaurants", location: userLocation!)
+            getBusinesses(category: Constants.sightsKey, location: userLocation!)
+            getBusinesses(category: Constants.restaurantsKey, location: userLocation!)
         }
     }
     
@@ -65,7 +68,7 @@ class ContentModel: NSObject, CLLocationManagerDelegate, ObservableObject {
     func getBusinesses(category: String, location:CLLocation) {
         
         // Create URL
-        let urlString = "https://api.yelp.com/v3/businesses/search"
+        let urlString = Constants.apiUrl
         var urlComponents = URLComponents(string: urlString)
         urlComponents?.queryItems = [
             URLQueryItem(name: "latitude", value: String(location.coordinate.latitude)),
@@ -80,21 +83,46 @@ class ContentModel: NSObject, CLLocationManagerDelegate, ObservableObject {
             // Create URL Request
             var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10.0)
             request.httpMethod = "GET"
-            request.addValue("Bearer 8do57JL3ToTYaL_q_vnWu-0fvFqf32KS8IsvupVlnU5sGXezPhnAZCeKkVv4xRiXGjHcWLmCtX-L97yN4Tb-qVPlPnXCbdhGJA_Uy-mVCrVXvuH-qL3VB_569yYJYnYx", forHTTPHeaderField: "Authorization")
+            request.addValue("Bearer \(Constants.apiKey)", forHTTPHeaderField: "Authorization")
             
             // Get URLSession
             let session = URLSession.shared
             
             // Create Data Task
-            let dataTask = session.dataTask(with: request) { Data, response, error in
+            let dataTask = session.dataTask(with: request) { (data, response, error) in
                 
                 // Check that there isn't an error
                 if error == nil {
-                    print(response)
+                    
+                    do {
+                        // parse json
+                        let decoder = JSONDecoder()
+                        let result = try decoder.decode(BusinessSearch.self, from: data!)
+                        
+                        DispatchQueue.main.async {
+                            
+                            // Assign results to the appropriate property
+                            
+                            switch category {
+                            case Constants.sightsKey:
+                                self.sights = result.businesses
+                            case Constants.restaurantsKey:
+                                self.restaurants = result.businesses
+                            default:
+                                break
+                            }
+                        }
+                        
+                    }
+                    catch {
+                        print(error)
+                        
+                    }
                 }
             }
             
             // Start the Data Task
+            dataTask.resume()
         }
         
        
