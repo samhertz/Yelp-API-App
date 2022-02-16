@@ -23,11 +23,21 @@ struct HomeView: View {
                     // show list
                     
                     VStack (alignment: .leading) {
+                        
                         HStack {
+                            
                             Image(systemName: "location")
+                            
                             Text("San Francisco")
+                            
                             Spacer()
-                            Text("Switch to Map View")
+                            
+                            Button  {
+                                self.isMapShowing = true
+                            } label: {
+                                Text("Switch to Map View")
+                            }
+
                         }
                         Divider()
                         BusinessList()
@@ -37,6 +47,8 @@ struct HomeView: View {
                 }
                 else {
                     // Show map
+                    BusinessMap()
+                        .ignoresSafeArea()
                 }
             }
         }
