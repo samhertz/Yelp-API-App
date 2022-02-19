@@ -28,34 +28,68 @@ struct HomeView: View {
                         HStack {
                             
                             Image(systemName: "location")
-                            
-                            Text("San Francisco")
-                            
+                            Text(model.placemark?.locality ?? "")
                             Spacer()
-                            
                             Button  {
                                 self.isMapShowing = true
                             } label: {
                                 Text("Switch to Map View")
                             }
-
                         }
+                        
                         Divider()
-                        BusinessList()
+                        
+                        ZStack (alignment: .top){
+                            
+                            BusinessList()
+                            
+                            HStack {
+                                Spacer()
+                                YelpAttribution(link: "https://yelp.com")
+                            }
+                            .padding(.trailing, -20)
+                        }
                     }
                     .padding([.horizontal, .top])
                     .navigationBarHidden(true)
                 }
                 else {
-                    // Show map
-                    BusinessMap(selectedBusiness: $selectedBusiness)
-                        .ignoresSafeArea()
-                        .sheet(item: $selectedBusiness) { business in
+                    
+                    ZStack (alignment: .top){
+                        
+                        // Show map
+                        BusinessMap(selectedBusiness: $selectedBusiness)
+                            .ignoresSafeArea()
+                            .sheet(item: $selectedBusiness) { business in
+                                
+                                // Create a business detail view instance
+                                // Pass in the selected business
+                                BusinessDetail(business: business)
+                            }
+                        
+                        ZStack {
                             
-                            // Create a business detail view instance
-                            // Pass in the selected business
-                            BusinessDetail(business: business)
+                            Rectangle()
+                                .foregroundColor(.white)
+                                .cornerRadius(5)
+                                .frame(height: 48)
+                            
+                            HStack {
+                                
+                                Image(systemName: "location")
+                                Text(model.placemark?.locality ?? "")
+                                Spacer()
+                                Button  {
+                                    self.isMapShowing = false
+                                } label: {
+                                    Text("Switch to List View")
+                                }
+                            }
+                            .padding()
                         }
+                        .padding()
+                    }
+                    .navigationBarHidden(true)
                 }
             }
         }
